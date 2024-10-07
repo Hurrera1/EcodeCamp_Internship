@@ -1,82 +1,83 @@
 import gradio as gr
-import math
+import pandas as pd
 
-# Simple Calculator
-def simple_calculator(num1, operator, num2):
-    try:
-        if operator == "+":
-            return num1 + num2
-        elif operator == "-":
-            return num1 - num2
-        elif operator == "*":
-            return num1 * num2
-        elif operator == "/":
-            if num2 != 0:
-                return num1 / num2
+class ToDoList:
+    def __init__(self):
+        self.tasks = []
+
+    def add_task(self, task_description):
+        self.tasks.append({"Task": task_description, "Completed": False})
+        return pd.DataFrame(self.tasks)
+
+    def delete_task(self, task_index):
+        try:
+            del self.tasks[task_index]
+            return pd.DataFrame(self.tasks)
+        except IndexError:
+            return pd.DataFrame(self.tasks)
+
+    def mark_completed(self, task_index):
+        try:
+            self.tasks[task_index]["Completed"] = True
+            return pd.DataFrame(self.tasks).astype({"Completed": bool})
+        except IndexError:
+            return pd.DataFrame(self.tasks).astype({"Completed": bool})
+
+    def mark_not_completed(self, task_index):
+        try:
+            self.tasks[task_index]["Completed"] = False
+            return pd.DataFrame(self.tasks).astype({"Completed": bool})
+        except IndexError:
+            return pd.DataFrame(self.tasks).astype({"Completed": bool})
+
+    def update_task(self, task_index, task_description):
+        try:
+            self.tasks[task_index]["Task"] = task_description
+            return pd.DataFrame(self.tasks)
+        except IndexError:
+            return pd.DataFrame(self.tasks)
+
+def main():
+    todo_list = ToDoList()
+
+    def update(task_description, task_index, action, new_task_description):
+        if action == "Add Task":
+            return todo_list.add_task(task_description)
+        elif action == "Delete Task":
+            if task_index is not None and len(todo_list.tasks) > 0:
+                return todo_list.delete_task(int(task_index) - 1)
             else:
-                return "Error: Division by zero"
-        else:
-            return "Error: Invalid operator"
-    except Exception as e:
-        return str(e)
-
-# Advanced Calculator
-def advanced_calculator(num1, operator, num2):
-    try:
-        if operator == "+":
-            return num1 + num2
-        elif operator == "-":
-            return num1 - num2
-        elif operator == "*":
-            return num1 * num2
-        elif operator == "/":
-            if num2 != 0:
-                return num1 / num2
+                return pd.DataFrame(columns=["Task", "Completed"])
+        elif action == "Mark Task as Completed":
+            if task_index is not None and len(todo_list.tasks) > 0:
+                return todo_list.mark_completed(int(task_index) - 1)
             else:
-                return "Error: Division by zero"
-        elif operator == "^":
-            return num1 ** num2
-        elif operator == "sin":
-            return math.sin(math.radians(num1))
-        elif operator == "cos":
-            return math.cos(math.radians(num1))
-        elif operator == "tan":
-            return math.tan(math.radians(num1))
-        elif operator == "sqrt":
-            if num1 >= 0:
-                return math.sqrt(num1)
+                return pd.DataFrame(columns=["Task", "Completed"])
+        elif action == "Mark Task as Not Completed":
+            if task_index is not None and len(todo_list.tasks) > 0:
+                return todo_list.mark_not_completed(int(task_index) - 1)
             else:
-                return "Error: Square root of negative number"
-        elif operator == "log":
-            if num1 > 0:
-                return math.log(num1)
+                return pd.DataFrame(columns=["Task", "Completed"])
+        elif action == "Update Task":
+            if task_index is not None and len(todo_list.tasks) > 0:
+                return todo_list.update_task(int(task_index) - 1, new_task_description)
             else:
-                return "Error: Logarithm of non-positive number"
-        else:
-            return "Error: Invalid operator"
-    except Exception as e:
-        return str(e)
+                return pd.DataFrame(columns=["Task", "Completed"])
 
+    demo = gr.Interface(
+        fn=update,
+        inputs=[
+            gr.Textbox(label="Task Description"),
+            gr.Number(label="Task Index", value=1),
+            gr.Radio(["Add Task", "Delete Task", "Mark Task as Completed", "Mark Task as Not Completed", "Update Task"], label="Action"),
+            gr.Textbox(label="New Task Description")
+        ],
+        outputs=gr.Dataframe(headers=["Task", "Completed"]),
+        title="To-Do List",
+        description="Manage tasks from the command line"
+    )
 
-# Gradio Interface
-with gr.Blocks() as demo:
-    gr.Markdown("# Calculator")
-    with gr.Tab("Simple Calculator"):
-        gr.Markdown("### Simple Calculator")
-        gr.Markdown("This calculator performs basic arithmetic operations.")
-        num1 = gr.Number(label="Number 1")
-        operator = gr.Radio(["+", "-", "*", "/"], label="Operator")
-        num2 = gr.Number(label="Number 2")
-        result = gr.Number(label="Result")
-        gr.Button("Calculate").click(simple_calculator, inputs=[num1, operator, num2], outputs=result)
-    
-    with gr.Tab("Advanced Calculator"):
-        gr.Markdown("### Advanced Calculator")
-        gr.Markdown("This calculator performs advanced arithmetic operations, including exponentiation, trigonometric functions, and logarithms.")
-        num1 = gr.Number(label="Number 1")
-        operator = gr.Radio([ "^", "sin", "cos", "tan", "sqrt", "log"], label="Operator")
-        num2 = gr.Number(label="Number 2")
-        result = gr.Number(label="Result")
-        gr.Button("Calculate").click(advanced_calculator, inputs=[num1, operator, num2], outputs=result)
+    demo.launch()
 
-demo.launch()
+if __name__ == "__main__":
+    main()
