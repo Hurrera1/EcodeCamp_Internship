@@ -1,83 +1,89 @@
 import gradio as gr
-import pandas as pd
 
-class ToDoList:
-    def __init__(self):
-        self.tasks = []
+# Define the quiz questions and answers
+questions =[
+    {
+        "question": "What is the capital of pakistan?",
+        "answers": ["lahore", "Sialkot", "Karachi","Islamabad"],
+       "correct_answer": "Islamabad"
+    },
+    {
+       "question": "What is the national language of Pakistan?",
+        "answers": ["Urdu", "English", "Punjabi", "Sindhi"],
+        "correct_answer": "Urdu"
+    },
+    {
+        "question": "Who is the founder of Pakistan?",
+        "answers": ["Muhammad Ali Jinnah", "Liaquat Ali Khan", "Ayub Khan", "Zulfikar Ali Bhutto"],
+        "correct_answer": "Muhammad Ali Jinnah"
+    },
+    {
+        "question": "What is the largest city in Pakistan?",
+        "answers": ["Karachi", "Lahore", "Islamabad", "Faisalabad"],
+        "correct_answer": "Karachi"
+    },
+    {
+       "question": "What is the highest mountain peak in Pakistan?",
+        "answers": ["K2", "Nanga Parbat", "Rakaposhi", "Diran"],
+        "correct_answer": "K2"
+    },
+    {
+       "question": "What is the national animal of Pakistan?",
+        "answers": ["Markhor", "Snow leopard", "Asiatic lion", "Bengal tiger"],
+        "correct_answer": "Markhor"
+    },
+    {
+        "question": "What is the national bird of Pakistan?",
+        "answers": ["Chukar", "Peacock", "Partridge", "Falcon"],
+        "correct_answer": "Chukar"
+    },
+    {
+        "question": "What is the capital of France?",
+        "answers": ["Paris", "London", "Berlin", "Rome"],
+        "correct_answer": "Paris"
+    },
+    {
+        "question": "What is the largest planet in our solar system?",
+        "answers": ["Earth", "Saturn", "Jupiter", "Uranus"],
+        "correct_answer": "Jupiter"
+    },
+    {
+        "question": "What is the smallest country in the world?",
+        "answers": ["Vatican City", "Monaco", "Nauru", "Tuvalu"],
+        "correct_answer": "Vatican City"
+    }
+]
 
-    def add_task(self, task_description):
-        self.tasks.append({"Task": task_description, "Completed": False})
-        return pd.DataFrame(self.tasks)
+# Define the quiz function
+def quiz(*answers):
+    score = 0
+    outputs = []
+    for i, question in enumerate(questions):
+        correct_answer = question["correct_answer"]
+        if answers[i] == correct_answer:
+            score += 1
+        outputs.append(f"Correct answer: {correct_answer}")
+        outputs.append(f"Your answer: {answers[i]}")
+        outputs.append(f"Score: {score}/{len(questions)}")
+    return "\n".join(outputs)
 
-    def delete_task(self, task_index):
-        try:
-            del self.tasks[task_index]
-            return pd.DataFrame(self.tasks)
-        except IndexError:
-            return pd.DataFrame(self.tasks)
+# Create the Gradio interface
+demo = gr.Interface(
+    fn=quiz,
+    inputs=[gr.Radio(questions[0]["answers"], label=questions[0]["question"]),
+            gr.Radio(questions[1]["answers"], label=questions[1]["question"]),
+            gr.Radio(questions[2]["answers"], label=questions[2]["question"]),
+            gr.Radio(questions[3]["answers"], label=questions[3]["question"]),
+            gr.Radio(questions[4]["answers"], label=questions[4]["question"]),
+            gr.Radio(questions[5]["answers"], label=questions[5]["question"]),
+            gr.Radio(questions[6]["answers"], label=questions[6]["question"]),
+            gr.Radio(questions[7]["answers"], label=questions[7]["question"]),
+            gr.Radio(questions[8]["answers"], label=questions[8]["question"]),
+            gr.Radio(questions[9]["answers"], label=questions[9]["question"])],
+    outputs="text",
+    title="Quiz Game",
+    description="Select the correct answer for each question."
+)
 
-    def mark_completed(self, task_index):
-        try:
-            self.tasks[task_index]["Completed"] = True
-            return pd.DataFrame(self.tasks).astype({"Completed": bool})
-        except IndexError:
-            return pd.DataFrame(self.tasks).astype({"Completed": bool})
-
-    def mark_not_completed(self, task_index):
-        try:
-            self.tasks[task_index]["Completed"] = False
-            return pd.DataFrame(self.tasks).astype({"Completed": bool})
-        except IndexError:
-            return pd.DataFrame(self.tasks).astype({"Completed": bool})
-
-    def update_task(self, task_index, task_description):
-        try:
-            self.tasks[task_index]["Task"] = task_description
-            return pd.DataFrame(self.tasks)
-        except IndexError:
-            return pd.DataFrame(self.tasks)
-
-def main():
-    todo_list = ToDoList()
-
-    def update(task_description, task_index, action, new_task_description):
-        if action == "Add Task":
-            return todo_list.add_task(task_description)
-        elif action == "Delete Task":
-            if task_index is not None and len(todo_list.tasks) > 0:
-                return todo_list.delete_task(int(task_index) - 1)
-            else:
-                return pd.DataFrame(columns=["Task", "Completed"])
-        elif action == "Mark Task as Completed":
-            if task_index is not None and len(todo_list.tasks) > 0:
-                return todo_list.mark_completed(int(task_index) - 1)
-            else:
-                return pd.DataFrame(columns=["Task", "Completed"])
-        elif action == "Mark Task as Not Completed":
-            if task_index is not None and len(todo_list.tasks) > 0:
-                return todo_list.mark_not_completed(int(task_index) - 1)
-            else:
-                return pd.DataFrame(columns=["Task", "Completed"])
-        elif action == "Update Task":
-            if task_index is not None and len(todo_list.tasks) > 0:
-                return todo_list.update_task(int(task_index) - 1, new_task_description)
-            else:
-                return pd.DataFrame(columns=["Task", "Completed"])
-
-    demo = gr.Interface(
-        fn=update,
-        inputs=[
-            gr.Textbox(label="Task Description"),
-            gr.Number(label="Task Index", value=1),
-            gr.Radio(["Add Task", "Delete Task", "Mark Task as Completed", "Mark Task as Not Completed", "Update Task"], label="Action"),
-            gr.Textbox(label="New Task Description")
-        ],
-        outputs=gr.Dataframe(headers=["Task", "Completed"]),
-        title="To-Do List",
-        description="Manage tasks from the command line"
-    )
-
-    demo.launch()
-
-if __name__ == "__main__":
-    main()
+# Launch the Gradio app
+demo.launch()
